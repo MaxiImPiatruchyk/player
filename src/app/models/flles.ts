@@ -1,9 +1,8 @@
 export interface File {
-  id?: number,
+  id: number,
   url: string,
   type:string,
   name: string,
   artist?:string,
   songName?:string,
-  cover?:string
 }

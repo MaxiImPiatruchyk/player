@@ -2,6 +2,7 @@ import {Component} from '@angular/core';
 import {Observable} from "rxjs";
 import * as moment from "moment/moment";
 import {files} from "src/app/data/data"
+import {File} from "./models/flles";
 
 @Component({
   selector: 'app-root',
@@ -9,9 +10,10 @@ import {files} from "src/app/data/data"
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  eventStatus=''
-  mutedBut:boolean
+  eventStatus = ''
+  mutedBut: boolean
   volumeValue = 0.5
+  activeSongId: number
   activeName: string
   audioObj = new Audio();
   audioEvents = [
@@ -30,7 +32,7 @@ export class AppComponent {
   duration = '00:00:00'
   durationSec = 0
   seek = 0
-  columnNames = ['ID','Title song','Artist', 'Song type', 'Name']
+  columnNames = ['ID', 'Title song', 'Artist', 'Song type', 'Name']
 
   play() {
     this.audioObj.play().then()
@@ -45,25 +47,24 @@ export class AppComponent {
     this.audioObj.currentTime = 0
   }
 
-  open(url: string, name: string) {
-    this.streamObserver(url, name).subscribe()
+  open(file:File) {
+    this.streamObserver(file).subscribe()
   }
 
   setVolume(event: Event) {
     this.volumeValue = this.audioObj.volume = Number((event.target as HTMLTextAreaElement).value)
   }
 
-  streamObserver(url: string, name: string) {
+  streamObserver(file:File) {
     return new Observable(() => {
-      this.audioObj.src = url
-      this.activeName = name
+      this.audioObj.src = file.url
+      this.activeName = file.name
+      this.activeSongId = file.id
       this.audioObj.load()
       this.audioObj.play().then()
 
-      const handler = (event:Event) => {
-        console.log(event)
+      const handler = (event: Event) => {
         this.eventStatus = event.type
-        console.log(this.eventStatus)
         this.currentTime = this.timeFormat(this.audioObj.currentTime)
         this.duration = this.timeFormat(this.audioObj.duration)
         this.durationSec = this.audioObj.duration
@@ -101,9 +102,31 @@ export class AppComponent {
 
   mute() {
     this.mutedBut = this.audioObj.muted = true
-    console.log(this.audioObj.muted)
   }
-  unmute(){
+
+  unmute() {
     this.mutedBut = this.audioObj.muted = false
+  }
+
+  getNextSong() {
+    let i = this.files.findIndex(el => el.id === this.activeSongId)
+    if (this.files && i > -1 && i < this.files.length - 1) {
+      const nextSong = this.files[i + 1]
+      this.open(nextSong)
+      return nextSong
+    } else {
+      return null
+    }
+  }
+
+  getPreviousSong() {
+    let i = this.files.findIndex(el => el.id === this.activeSongId)
+    if (this.files && i > 0 && i < this.files.length) {
+      const previousSong = this.files[i - 1]
+      this.open(previousSong)
+      return previousSong
+    } else {
+      return null
+    }
   }
 }
